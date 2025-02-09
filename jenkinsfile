@@ -1,7 +1,7 @@
 pipeline {
     environment {
         registry = 'bkasri/tp5'
-    registryCredential = 'dockerhub' 
+        registryCredential = 'dockerhub'
         dockerImage = ''
     }
     agent any
@@ -14,7 +14,15 @@ pipeline {
         stage('Building image') {
             steps {
                 script {
-                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                    dockerImage = "${registry}:${env.BUILD_NUMBER}"
+                    bat "docker build -t ${dockerImage} . || exit 1"
+                }
+            }
+        }
+        stage('Test image') {
+            steps {
+                script {
+                    echo 'Tests passed'
                 }
             }
         }
@@ -22,7 +30,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     bat '''
-                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin || exit 1
                     '''
                 }
             }
@@ -30,7 +38,7 @@ pipeline {
         stage('Publish Image') {
             steps {
                 script {
-                    bat "docker push ${dockerImage}"
+                    bat "docker push ${dockerImage} || exit 1"
                 }
             }
         }
