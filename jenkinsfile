@@ -1,6 +1,6 @@
 pipeline {
     environment {
-        registry = 'bkasri/tp5'
+        registry = "kelguemmat/tp4"
         registryCredential = 'dockerhub'
         dockerImage = ''
     }
@@ -8,37 +8,43 @@ pipeline {
     stages {
         stage('Cloning Git') {
             steps {
-                git 'https://github.com/Abdelkaderasri/tp5'
+                git 'https://github.com/kelguemmat/tp4master21-22'
             }
         }
         stage('Building image') {
             steps {
                 script {
-                    dockerImage = "${registry}:${env.BUILD_NUMBER}"
-                    bat "docker build -t ${dockerImage} . || exit 1"
+                    dockerImage = docker.build("${registry}:${env.BUILD_NUMBER}")
                 }
             }
         }
         stage('Test image') {
             steps {
                 script {
-                    echo 'Tests passed'
-                }
-            }
-        }
-        stage('Login to DockerHub') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    bat '''
-                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin || exit 1
-                    '''
+                    echo "Tests passed"
                 }
             }
         }
         stage('Publish Image') {
             steps {
                 script {
-                    bat "docker push ${dockerImage} || exit 1"
+                    docker.withRegistry('', registryCredential) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        stage('Deploy Image') {
+            steps {
+                script {
+                    bat '''
+                        docker stop tp4_container || exit 0
+                        docker rm tp4_container || exit 0
+                    '''
+               
+                    bat '''
+                        docker run -d --name tp4_container -p 8080:80 kelguemmat/tp4:%BUILD_NUMBER%
+                    '''
                 }
             }
         }
