@@ -14,29 +14,21 @@ pipeline {
         stage('Building image') {
             steps {
                 script {
-                    dockerImage = "bkasri/tp5:${env.BUILD_NUMBER}"
-                    sh "docker build -t ${dockerImage} ."
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
                 }
             }
         }
-        stage('Test image') {
+       stage('Login to DockerHub') {
             steps {
                 script {
-                    echo 'Tests passed'
-                }
-            }
-        }
-        stage('Login to DockerHub') {
-            steps {
-                script {
-                    sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
+                    bat "docker login -u %bkasri% -p %05041993Biika%"
                 }
             }
         }
         stage('Publish Image') {
             steps {
                 script {
-                    sh "docker push ${dockerImage}"
+                    bat "docker push ${dockerImage}"
                 }
             }
         }
