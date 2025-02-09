@@ -1,7 +1,7 @@
 pipeline {
     environment {
         registry = 'bkasri/tp5'
-        registryCredential = 'dockerhub'
+    registryCredential = 'dockerhub' 
         dockerImage = ''
     }
     agent any
@@ -18,10 +18,12 @@ pipeline {
                 }
             }
         }
-       stage('Login to DockerHub') {
+        stage('Login to DockerHub') {
             steps {
-                script {
-                    bat "docker login -u %bkasri% -p %05041993Biika%"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    bat '''
+                        echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                    '''
                 }
             }
         }
